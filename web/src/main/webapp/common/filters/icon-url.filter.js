@@ -5,7 +5,7 @@
 	'use strict';
 	
 	/**
-	 * (en)icon의 URL 경로를 반환 함. 
+	 * icon路径处理
 	 * @ko icon의 URL 경로를 반환 함.
 	 * @group Filter
 	 * @name pinpointApp#iconUrl
