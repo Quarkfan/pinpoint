@@ -274,6 +274,7 @@ gulp.task('pinpoint-js', function() {
 		'common/services/user-locales.service.js',
 		'common/help/help-content-en.js',
 		'common/help/help-content-ko.js',
+        'common/help/help-content-cn.js',
 		'common/help/help-content-template.js',
 		'common/services/help-content.service.js',
 		'common/services/analytics.service.js',
