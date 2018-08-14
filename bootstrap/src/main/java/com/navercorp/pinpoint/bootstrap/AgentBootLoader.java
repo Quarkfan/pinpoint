@@ -22,7 +22,9 @@ import java.util.concurrent.Callable;
 
 
 /**
+ * Agent的启动类
  * @author emeroad
+ * @author dean
  */
 public class AgentBootLoader {
 
