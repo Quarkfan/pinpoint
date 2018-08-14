@@ -17,7 +17,9 @@
 package com.navercorp.pinpoint.bootstrap.agentdir;
 
 /**
+ * classpath解析接口
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public interface ClassPathResolver {
 

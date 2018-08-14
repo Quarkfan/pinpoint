@@ -34,21 +34,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Agent路径解析器
  * @author emeroad
  */
 public class AgentDirBaseClassPathResolver implements ClassPathResolver {
 
     private final BootLogger logger = BootLogger.getLogger(this.getClass().getName());
-
+    //版本正则表达式
     static final String VERSION_PATTERN = "(-[0-9]+\\.[0-9]+\\.[0-9]+((\\-SNAPSHOT)|(-RC[0-9]+))?)?";
-
+    //其他相关正则表达式解析
     static final Pattern DEFAULT_AGENT_BOOTSTRAP_PATTERN = compile("pinpoint-bootstrap" + VERSION_PATTERN + "\\.jar");
     static final Pattern DEFAULT_AGENT_COMMONS_PATTERN = compile("pinpoint-commons" + VERSION_PATTERN + "\\.jar");
     static final Pattern DEFAULT_AGENT_CORE_PATTERN = compile("pinpoint-bootstrap-core" + VERSION_PATTERN + "\\.jar");
     static final Pattern DEFAULT_AGENT_JAVA9_PATTERN = compile("pinpoint-bootstrap-java9" + VERSION_PATTERN + "\\.jar");
     static final Pattern DEFAULT_AGENT_CORE_OPTIONAL_PATTERN = compile("pinpoint-bootstrap-core-optional" + VERSION_PATTERN + "\\.jar");
     static final Pattern DEFAULT_ANNOTATIONS = compile("pinpoint-annotations" + VERSION_PATTERN + "\\.jar");
-
+    //相关正则匹配类
     private final Pattern agentBootstrapPattern;
     private final Pattern agentCommonsPattern;
     private final Pattern agentCorePattern;
@@ -56,14 +57,17 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
     private final Pattern agentCoreOptionalPattern;
     private final Pattern annotationsPattern;
 
+    //classpath
     private final String classPath;
+    //扩展名列表
     private List<String> fileExtensionList;
 
-
+    //正则编译
     private static Pattern compile(String regex) {
         return Pattern.compile(regex);
     }
 
+    //构造函数，初始化相关正则
     public AgentDirBaseClassPathResolver(String classPath) {
         if (classPath == null) {
             throw new NullPointerException("classPath must not be null");
@@ -78,6 +82,7 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         this.fileExtensionList = getDefaultFileExtensionList();
     }
 
+    //获取默认扩展名列表
     static List<String> getDefaultFileExtensionList() {
         List<String> extensionList = new ArrayList<String>(3);
         extensionList.add("jar");
@@ -88,20 +93,26 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
 
 
     @Override
+    //解析方法
     public AgentDirectory resolve() {
 
-        // find boot-strap.jar
+        // 查找 boot-strap.jar
         final String bootstrapJarName = this.findBootstrapJar(this.classPath);
+        //查找失败抛出异常
         if (bootstrapJarName == null) {
             throw new IllegalStateException("pinpoint-bootstrap-x.x.x(-SNAPSHOT).jar not found.");
         }
 
+        //解析agentJar的全路径
         final String agentJarFullPath = parseAgentJarPath(classPath, bootstrapJarName);
+        //如果未找到，抛出异常
         if (agentJarFullPath == null) {
             throw new IllegalStateException("pinpoint-bootstrap-x.x.x(-SNAPSHOT).jar not found. " + classPath);
         }
-        final String agentDirPath = getAgentDirPath(agentJarFullPath);
 
+        //查找agent的目录路径
+        final String agentDirPath = getAgentDirPath(agentJarFullPath);
+        //解析引导路径内的内容
         final BootDir bootDir = resolveBootDir(agentDirPath);
 
         final String agentLibPath = getAgentLibPath(agentDirPath);
@@ -115,15 +126,17 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
 
         return agentDirectory;
     }
-
+    //获取Agent的绝对路径
     private String getAgentDirPath(String agentJarFullPath) {
+        //获取jar的路径（目录位置）
         String agentDirPath = parseAgentDirPath(agentJarFullPath);
+        //如果路径不存在抛出异常
         if (agentDirPath == null) {
             throw new IllegalStateException("agentDirPath is null " + classPath);
         }
 
         logger.info("Agent original-path:" + agentDirPath);
-        // defense alias change
+        // 获取绝对路径
         agentDirPath = toCanonicalPath(agentDirPath);
         logger.info("Agent canonical-path:" + agentDirPath);
         return agentDirPath;
@@ -140,21 +153,24 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return new BootDir(pinpointCommonsJar, bootStrapCoreJar, bootStrapCoreOptionalJar, bootStrapJava9Jar, annotationsJar);
     }
 
-
+    //查找Bootstrap.Jar
     String findBootstrapJar(String classPath) {
+        //解析出匹配结果
         final Matcher matcher = agentBootstrapPattern.matcher(classPath);
+        //匹配失败返回null
         if (!matcher.find()) {
             return null;
         }
+        //成功返回具体内容
         return parseAgentJar(matcher, classPath);
     }
 
-
+    //转换为标准路径（绝对路径）
     private String toCanonicalPath(String path) {
         final File file = new File(path);
         return toCanonicalPath(file);
     }
-
+    //转换为标准路径（绝对路径）
     private String toCanonicalPath(File file) {
         try {
             return file.getCanonicalPath();
@@ -198,15 +214,18 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         });
     }
 
-
+    //截取agentJar
     private String parseAgentJar(Matcher matcher, String classpath) {
         int start = matcher.start();
         int end = matcher.end();
         return classPath.substring(start, end);
     }
 
+    //解析agentJar的全路径
     private String parseAgentJarPath(String classPath, String agentJar) {
+        //按照路径分割切分出classpath地址列表
         String[] classPathList = classPath.split(File.pathSeparator);
+        //遍历查找是否有路径含有所需的jar包，一旦查找到就返回
         for (String findPath : classPathList) {
             boolean find = findPath.contains(agentJar);
             if (find) {
@@ -336,6 +355,7 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         });
     }
 
+    //截取从0开始到最后一个路径斜杠的目录
     private String parseAgentDirPath(String agentJarFullPath) {
         int index1 = agentJarFullPath.lastIndexOf("/");
         int index2 = agentJarFullPath.lastIndexOf("\\");

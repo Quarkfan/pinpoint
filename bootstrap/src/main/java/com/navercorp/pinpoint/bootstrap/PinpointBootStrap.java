@@ -31,16 +31,21 @@ import com.navercorp.pinpoint.bootstrap.agentdir.JavaAgentPathResolver;
 import com.navercorp.pinpoint.common.util.CodeSourceUtils;
 
 /**
+ * Agent的启动类，入口与方法为premain
  * @author emeroad
  * @author netspider
+ * @author dean
  */
 public class PinpointBootStrap {
 
+    //日志记录
     private static final BootLogger logger = BootLogger.getLogger(PinpointBootStrap.class.getName());
 
+    //FIXME 加载状态？
     private static final LoadState STATE = new LoadState();
 
 
+    //instrument 规定的方法  agent的入口
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         if (agentArgs == null) {
             agentArgs = "";
@@ -48,18 +53,23 @@ public class PinpointBootStrap {
         logger.info(ProductInfo.NAME + " agentArgs:" + agentArgs);
         logger.info("classLoader:" + PinpointBootStrap.class.getClassLoader());
         logger.info("contextClassLoader:" + Thread.currentThread().getContextClassLoader());
+        //Object的是所有类的父类，按照双亲委派机制，判断PinpointBootStrap是否是和Object为同一加载器
+        //如果不是 提示错误 并结束。
         if (Object.class.getClassLoader() != PinpointBootStrap.class.getClassLoader()) {
+            //CodeSourceUtils工具类，具体详见工具类内部，在这里主要用户获取类的路径地址
             final URL location = CodeSourceUtils.getCodeLocation(PinpointBootStrap.class);
             logger.warn("Invalid pinpoint-bootstrap.jar:" + location);
             return;
         }
 
-
+        //标识启动成功
         final boolean success = STATE.start();
         if (!success) {
             logger.warn("pinpoint-bootstrap already started. skipping agent loading.");
             return;
         }
+
+        //参数转换  从String->map
         Map<String, String> agentArgsMap = argsToMap(agentArgs);
 
         JavaAgentPathResolver javaAgentPathResolver = JavaAgentPathResolver.newJavaAgentPathResolver();
@@ -121,10 +131,12 @@ public class PinpointBootStrap {
         return PinpointBootStrap.class.getClassLoader();
     }
 
-
+    //将字符串参数转换为map
     private static Map<String, String> argsToMap(String agentArgs) {
+        //利用参数处理器处理参数
         ArgsParser argsParser = new ArgsParser();
         Map<String, String> agentArgsMap = argsParser.parse(agentArgs);
+        //如果参数不为空，日志记录
         if (!agentArgsMap.isEmpty()) {
             logger.info("agentParameter:" + agentArgs);
         }

@@ -23,11 +23,15 @@ import java.util.Map;
 import java.util.Scanner;
 
 /**
+ * 参数处理器
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public class ArgsParser {
 
+    //将字符串参数转换为Map
     public Map<String, String> parse(String args) {
+        //参数为空返回空集合
         if (isEmpty(args)) {
             return Collections.emptyMap();
         }
@@ -35,24 +39,30 @@ public class ArgsParser {
         final Map<String, String> map = new HashMap<String, String>();
 
         Scanner scanner = new Scanner(args);
+        //设置分隔符为空格
         scanner.useDelimiter("\\s*,\\s*");
+
 
         while (scanner.hasNext()) {
             String token = scanner.next();
             int assign = token.indexOf('=');
 
             if (assign == -1) {
+                //非键值型参数
                 map.put(token, "");
             } else {
+                //键值型参数
                 String key = token.substring(0, assign);
                 String value = token.substring(assign + 1);
                 map.put(key, value);
             }
         }
         scanner.close();
+        //返回指定map的不可修改视图
         return Collections.unmodifiableMap(map);
     }
 
+    //判断是否为空
     private boolean isEmpty(String args) {
         return args == null || args.isEmpty();
     }

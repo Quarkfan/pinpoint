@@ -20,7 +20,9 @@ package com.navercorp.pinpoint.bootstrap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * 标识启动状态
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public class LoadState {
 

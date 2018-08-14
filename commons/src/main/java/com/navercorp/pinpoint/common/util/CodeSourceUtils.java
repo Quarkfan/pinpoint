@@ -21,12 +21,15 @@ import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
 /**
+ * 源码工具类
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public final class CodeSourceUtils {
     private CodeSourceUtils() {
     }
 
+    //通过Class参数 获取类源码所在位置
     public static URL getCodeLocation(Class<?> clazz) {
         if (clazz == null) {
             throw new NullPointerException("clazz must not be null");
@@ -35,12 +38,14 @@ public final class CodeSourceUtils {
         return getCodeLocation(protectionDomain);
     }
 
-
+    //通过保护域获取源码地址
     public static URL getCodeLocation(ProtectionDomain protectionDomain) {
         if (protectionDomain == null) {
             return null;
         }
 
+
+        //获取jar包的路径
         final CodeSource codeSource = protectionDomain.getCodeSource();
         if (codeSource == null) {
             return null;

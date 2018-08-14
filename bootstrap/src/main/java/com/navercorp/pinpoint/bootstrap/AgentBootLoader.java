@@ -22,16 +22,27 @@ import java.util.concurrent.Callable;
 
 
 /**
- * Agent的启动类
+ *
  * @author emeroad
  * @author dean
  */
 public class AgentBootLoader {
 
+    /*
+     * java.lang包下的类，安全管理器。
+     *
+     */
     private static final SecurityManager SECURITY_MANAGER = System.getSecurityManager();
 
+    /*
+    * 类加载器。
+    *
+    * */
     private final ClassLoader classLoader;
 
+    /*
+    * 引导类
+    * */
     private final String bootClass;
 
     private final ContextClassLoaderExecuteTemplate<Object> executeTemplate;

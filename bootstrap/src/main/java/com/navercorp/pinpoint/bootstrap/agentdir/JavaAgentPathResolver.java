@@ -25,7 +25,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 解析JavaAgent地址
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public class JavaAgentPathResolver {
 

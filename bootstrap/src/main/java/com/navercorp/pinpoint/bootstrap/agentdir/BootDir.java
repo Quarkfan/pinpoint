@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.jar.JarFile;
 
 /**
+ * 用于存储引导路径内的各个包的地址
  * @author Woonduk Kang(emeroad)
+ * @dean
  */
 public class BootDir {
 
