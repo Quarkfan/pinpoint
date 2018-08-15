@@ -17,6 +17,7 @@
 package com.navercorp.pinpoint.common.util;
 
 /**
+ * properties文件工具类操作接口
  * @author emeroad
  */
 public interface SimpleProperty {

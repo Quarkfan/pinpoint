@@ -34,21 +34,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * pinpoint启动器
  * @author Jongho Moon
+ * @author dean
  *
  */
 class PinpointStarter {
-
+    //日志记录器
     private final BootLogger logger = BootLogger.getLogger(PinpointStarter.class.getName());
-
+    //FIXME agent类型
     public static final String AGENT_TYPE = "AGENT_TYPE";
-
+    //FIXME 默认agent
     public static final String DEFAULT_AGENT = "DEFAULT_AGENT";
+    //引导类
     public static final String BOOT_CLASS = "com.navercorp.pinpoint.profiler.DefaultAgent";
-
+    //插件测试agent
     public static final String PLUGIN_TEST_AGENT = "PLUGIN_TEST";
+    //插件测试引导类
     public static final String PLUGIN_TEST_BOOT_CLASS = "com.navercorp.pinpoint.test.PluginTestAgent";
 
+    //初始化配置存储
     private SimpleProperty systemProperty = SystemProperty.INSTANCE;
 
     private final Map<String, String> agentArgs;
@@ -57,7 +62,7 @@ class PinpointStarter {
     private final ClassLoader parentClassLoader;
     private final ModuleBootLoader moduleBootLoader;
 
-
+    //构造函数
     public PinpointStarter(ClassLoader parentClassLoader, Map<String, String> agentArgs,
                            AgentDirectory agentDirectory,
                            Instrumentation instrumentation, ModuleBootLoader moduleBootLoader) {
@@ -65,12 +70,15 @@ class PinpointStarter {
 //        if (bootstrapClassLoader == null) {
 //            throw new NullPointerException("bootstrapClassLoader must not be null");
 //        }
+        //agent参数不能为空
         if (agentArgs == null) {
             throw new NullPointerException("agentArgs must not be null");
         }
+        //agent目录不能为空
         if (agentDirectory == null) {
             throw new NullPointerException("agentDirectory must not be null");
         }
+        //探针不能为空
         if (instrumentation == null) {
             throw new NullPointerException("instrumentation must not be null");
         }
@@ -82,30 +90,38 @@ class PinpointStarter {
 
     }
 
-
+    //启动
     boolean start() {
+        //agentid验证器
         final IdValidator idValidator = new IdValidator();
+        //读取agentID
         final String agentId = idValidator.getAgentId();
+        //agentID为空启动失败
         if (agentId == null) {
             return false;
         }
+        //读取应用名称，为空启动失败
         final String applicationName = idValidator.getApplicationName();
         if (applicationName == null) {
             return false;
         }
 
+        //判断是否是容器
         final ContainerResolver containerResolver = new ContainerResolver();
         final boolean isContainer = containerResolver.isContainer();
 
+        //读取插件jar列表
         List<String> pluginJars = agentDirectory.getPlugins();
+        //读取配置路径
         String configPath = getConfigPath(agentDirectory);
         if (configPath == null) {
             return false;
         }
 
-        // set the path of log file as a system property
+        // 设置日志记录地址到系统属性中
         saveLogFilePath(agentDirectory);
 
+        //保存版本信息
         savePinpointVersion();
 
         try {
@@ -192,7 +208,7 @@ class PinpointStarter {
         Runtime.getRuntime().addShutdownHook(thread);
     }
 
-
+    //log保存地址设置到系统属性里
     private void saveLogFilePath(AgentDirectory agentDirectory) {
         String agentLogFilePath = agentDirectory.getAgentLogFilePath();
         logger.info("logPath:" + agentLogFilePath);
@@ -200,25 +216,32 @@ class PinpointStarter {
         systemProperty.setProperty(ProductInfo.NAME + ".log", agentLogFilePath);
     }
 
+    //版本信息写入到系统的属性中
     private void savePinpointVersion() {
         logger.info("pinpoint version:" + Version.VERSION);
         systemProperty.setProperty(ProductInfo.NAME + ".version", Version.VERSION);
     }
 
+    //读取配置路径
     private String getConfigPath(AgentDirectory agentDirectory) {
+        //拼接配置名称
         final String configName = ProductInfo.NAME + ".config";
+        //从systemProperty中读取配置的具体值
         String pinpointConfigFormSystemProperty = systemProperty.getProperty(configName);
+        //读取成功返回
         if (pinpointConfigFormSystemProperty != null) {
             logger.info(configName + " systemProperty found. " + pinpointConfigFormSystemProperty);
             return pinpointConfigFormSystemProperty;
         }
 
+        //从systemProperty中读取配置的具体值失败，尝试从config文件中读取
         String classPathAgentConfigPath = agentDirectory.getAgentConfigPath();
         if (classPathAgentConfigPath != null) {
             logger.info("classpath " + configName + " found. " + classPathAgentConfigPath);
             return classPathAgentConfigPath;
         }
 
+        //读取失败
         logger.info(configName + " file not found.");
         return null;
     }

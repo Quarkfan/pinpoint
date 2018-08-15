@@ -22,7 +22,9 @@ import java.net.URL;
 import java.util.List;
 
 /**
+ * agent目录处理聚合结果
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public class AgentDirectory {
 
@@ -34,11 +36,12 @@ public class AgentDirectory {
     private final List<String> plugins;
     private final List<URL> libs;
 
-
+    //构造函数
     public AgentDirectory(String agentJarName,
                           String agentJarFullPath, String agentDirPath,
                           BootDir bootDir,
                           List<URL> libs, List<String> plugins) {
+        //bootdir校验
         if (bootDir == null) {
             throw new NullPointerException("bootDir must not be null");
         }

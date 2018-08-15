@@ -22,7 +22,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 校验工具类
  * @author emeroad
+ * @author dean
  */
 public final class IdValidateUtils {
 
@@ -40,7 +42,7 @@ public final class IdValidateUtils {
     public static boolean validateId(String id) {
         return validateId(id, DEFAULT_MAX_LENGTH);
     }
-
+    //校验
     public static boolean validateId(String id, int maxLength) {
         if (id == null) {
             throw new NullPointerException("id must not be null");
@@ -48,10 +50,11 @@ public final class IdValidateUtils {
         if (maxLength <= 0) {
             throw new IllegalArgumentException("negative maxLength:" + maxLength);
         }
-
+        //校验组成是否正确
         if (!checkPattern(id)) {
             return false;
         }
+        //校验长度是否正确
         if (!checkLength(id, maxLength)) {
             return false;
         }
@@ -59,16 +62,18 @@ public final class IdValidateUtils {
         return true;
     }
 
+    //正则校验
     public static boolean checkPattern(String id) {
         final Matcher matcher = ID_PATTERN.matcher(id);
         return matcher.matches();
     }
 
+    //校验长度是否超长
     public static boolean checkLength(String id, int maxLength) {
         if (id == null) {
             throw new NullPointerException("id must not be null");
         }
-        // try encode
+        // 尝试编码
         final int idLength = getLength(id);
         if (idLength <= 0) {
             return false;
@@ -76,6 +81,7 @@ public final class IdValidateUtils {
         return idLength <= maxLength;
     }
 
+    //编码返回长度
     public static int getLength(String id) {
         if (id == null) {
             return -1;
@@ -83,7 +89,7 @@ public final class IdValidateUtils {
 
         final byte[] idBytes = BytesUtils.toBytes(id);
         if (idBytes == null) {
-            // encoding fail
+            // 编码失败
             return -1;
         }
         return idBytes.length;

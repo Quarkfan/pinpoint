@@ -38,9 +38,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 默认引导agent
  * @author emeroad
  * @author koo.taejin
  * @author hyungil.jeong
+ * @author dean
  */
 public class DefaultAgent implements Agent {
 

@@ -17,7 +17,9 @@
 package com.navercorp.pinpoint;
 
 /**
+ * 产品名称
  * @author emeroad
+ * @author dean
  */
 public final class ProductInfo {
     public static final String NAME = "pinpoint";

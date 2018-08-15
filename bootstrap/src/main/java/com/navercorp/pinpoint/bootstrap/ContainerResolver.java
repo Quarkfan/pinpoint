@@ -21,7 +21,9 @@ import com.navercorp.pinpoint.common.util.StringUtils;
 import java.util.Properties;
 
 /**
+ * 容器处理器，根据参数判断是否容器
  * @author HyunGil Jeong
+ * @author dean
  */
 public class ContainerResolver {
 

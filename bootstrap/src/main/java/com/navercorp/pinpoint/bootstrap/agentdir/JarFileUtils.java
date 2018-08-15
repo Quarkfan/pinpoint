@@ -21,28 +21,37 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 
 /**
+ * JarFile工具类
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 final class JarFileUtils {
 
+    //给定filepath打开jarFile
     public static JarFile openJarFile(String filePath) {
+        //路径不为空
         if (filePath == null) {
             throw new NullPointerException("filePath must not be null");
         }
 
         final File file = new File(filePath);
+        //路径存在
         if (!file.exists()) {
             throw new IllegalArgumentException(file + " not found");
         }
+        //路径不是一个目录
         if (file.isDirectory()) {
             throw new IllegalArgumentException(file + " is directory");
         }
+        //必须是一个文件
         if (!(file.isFile())) {
             throw new IllegalArgumentException(file + " not file");
         }
+        //文件必须可读
         if (!file.canRead()) {
             throw new IllegalArgumentException(file + " can read");
         }
+        //构建JarFile
         try {
             return new JarFile(file);
         } catch (IOException e) {

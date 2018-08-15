@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 /**
+ * bytes工具类
  * @author emeroad
  */
 public final class BytesUtils {

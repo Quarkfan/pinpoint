@@ -18,6 +18,7 @@ package com.navercorp.pinpoint.common.util;
 
 
 /**
+ * prrperties操作工具类实现，由System类承载
  * @author emeroad
  */
 public class SystemProperty implements SimpleProperty {

@@ -27,6 +27,8 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Johannes Henkel
  */
+
+//用于保证在测试期间的方法可见性
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 public @interface VisibleForTesting {

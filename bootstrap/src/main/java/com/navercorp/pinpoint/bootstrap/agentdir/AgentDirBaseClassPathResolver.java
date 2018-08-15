@@ -115,12 +115,15 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         //解析引导路径内的内容
         final BootDir bootDir = resolveBootDir(agentDirPath);
 
+        //解析agent的lib目录
         final String agentLibPath = getAgentLibPath(agentDirPath);
         final List<URL> libs = resolveLib(agentLibPath, bootDir);
 
+        //解析agent插件路径
         String agentPluginPath = getAgentPluginPath(agentDirPath);
         final List<String> plugins = resolvePlugins(agentPluginPath);
 
+        //聚合结果
         final AgentDirectory agentDirectory = new AgentDirectory(bootstrapJarName, agentJarFullPath, agentDirPath,
                 bootDir, libs, plugins);
 
@@ -142,14 +145,16 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return agentDirPath;
     }
 
-
+    //查找相关jar的位置
     private BootDir resolveBootDir(String agentDirPath) {
         String bootDirPath = agentDirPath + File.separator + "boot";
+        //查找目录下相关jar的绝对路径
         String pinpointCommonsJar = find(bootDirPath, "pinpoint-commons.jar", agentCommonsPattern);
         String bootStrapCoreJar = find(bootDirPath, "pinpoint-bootstrap-core.jar", agentCorePattern);
         String bootStrapJava9Jar = find(bootDirPath, "pinpoint-bootstrap-java9.jar", agentJava9Pattern);
         String bootStrapCoreOptionalJar = find(bootDirPath, "pinpoint-bootstrap-core-optional.jar", agentCoreOptionalPattern);
         String annotationsJar = find(bootDirPath,"pinpoint-annotations.jar", annotationsPattern);
+        //构建BootDir对象存储绝对路径
         return new BootDir(pinpointCommonsJar, bootStrapCoreJar, bootStrapCoreOptionalJar, bootStrapJava9Jar, annotationsJar);
     }
 
@@ -179,29 +184,34 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
             return file.getAbsolutePath();
         }
     }
-
+    //查找目录内某个符合正则的文件绝对路径
     private String find(String bootDirPath, final String name, final Pattern pattern) {
         final File[] files = listFiles(name, pattern, bootDirPath);
         if (isEmpty(files)) {
+            //文件没找到
             logger.info(name + " not found.");
             return null;
         } else if (files.length == 1) {
+            //只有一个，返回局对路径
             File file = files[0];
             return toCanonicalPath(file);
         } else {
+            //返回多个记录日志不返回。
             logger.info("too many " + name + " found. " + Arrays.toString(files));
             return null;
         }
     }
-
+    //判断文件列表是否为空
     private boolean isEmpty(File[] files) {
         return files == null || files.length == 0;
     }
 
+    //列出目录内符合正则的查找文件
     private File[] listFiles(final String name, final Pattern pattern, String bootDirPath) {
         File bootDir = new File(bootDirPath);
         return bootDir.listFiles(new FilenameFilter() {
             @Override
+            //实现FilenameFilter接口，文件过滤器
             public boolean accept(File dir, String fileName) {
                 Matcher matcher = pattern.matcher(fileName);
                 if (matcher.matches()) {
@@ -235,24 +245,28 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return null;
     }
 
-
+    //拼接lib地址
     private String getAgentLibPath(String agentDirPath) {
         return agentDirPath + File.separator + "lib";
     }
-
+    //拼接plugin地址
     private String getAgentPluginPath(String agentDirPath) {
         return agentDirPath + File.separator + "plugin";
     }
 
+    //处理lib目录，bootdir用于处理没找到引导jar时，在此处添加进入一起处理，暂时不需要
     private List<URL> resolveLib(String agentLibPath, BootDir bootDir) {
         File libDir = new File(agentLibPath);
+        //如果目录不存在或者不是一个目录，返回空集合
         if (checkDirectory(libDir)) {
             return Collections.emptyList();
         }
         final List<URL> jarURLList = new ArrayList<URL>();
-
+        //在目录中查找jar
         final File[] findJarList = findJar(libDir);
+
         if (findJarList != null) {
+            //jarlist不为空，循环迭代转换为url，然后放入jarurllist
             for (File file : findJarList) {
                 URL url = toURI(file);
                 if (url != null) {
@@ -260,7 +274,7 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
                 }
             }
         }
-
+        //将lib目录转化为URL后，也放入到jarURLList
         URL agentDirUri = toURI(new File(agentLibPath));
         if (agentDirUri != null) {
             jarURLList.add(agentDirUri);
@@ -277,15 +291,17 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return jarURLList;
     }
 
+    //处理插件路径
     private List<String> resolvePlugins(String agentPluginPath) {
         final File directory = new File(agentPluginPath);
 
+        //目录校验，如果不存在或者不是一个目录返回空集合
         if (checkDirectory(directory)) {
             logger.warn(directory + " is not a directory");
             return Collections.emptyList();
         }
 
-
+        //插件路径内只接受.jar结尾的文件
         final File[] jars = directory.listFiles(new FilenameFilter() {
 
             @Override
@@ -294,22 +310,28 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
             }
         });
 
+        //如果插件列表为空，返回空集合
         if (isEmpty(jars)) {
             return Collections.emptyList();
         }
 
+        //过滤出所有可读插件
         List<String> pluginFileList = filterReadPermission(jars);
+        //输出日志
         for (String pluginJar : pluginFileList) {
             logger.info("Found plugins:" + pluginJar);
         }
         return pluginFileList;
     }
 
+    //目录校验
     private boolean checkDirectory(File file) {
+        //如果目录不存在 返回true
         if (!file.exists()) {
             logger.warn(file + " not found");
             return true;
         }
+        //如果不是一个目录返回true
         if (!file.isDirectory()) {
             logger.warn(file + " is not a directory");
             return true;
@@ -317,9 +339,11 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return false;
     }
 
+    //过滤所有有可读权限的jar
     private List<String> filterReadPermission(File[] jars) {
         List<String> result = new ArrayList<String>();
         for (File pluginJar : jars) {
+            //循环迭代，不可读的略过
             if (!pluginJar.canRead()) {
                 logger.info("File '" + pluginJar + "' cannot be read");
                 continue;
@@ -330,6 +354,7 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         return result;
     }
 
+    //将给定文件转换为URL
     private URL toURI(File file) {
         URI uri = file.toURI();
         try {
@@ -340,11 +365,13 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         }
     }
 
+    //在给定目录中查找jar
     private File[] findJar(File libDir) {
         return libDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
                 String path = pathname.getName();
+                //判断是否在给定的扩展名列表中
                 for (String extension : fileExtensionList) {
                     if (path.lastIndexOf("." + extension) != -1) {
                         return true;

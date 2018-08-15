@@ -25,7 +25,9 @@ import java.net.URL;
 import java.util.Optional;
 
 /**
+ * JDK9支持的模块化
  * @author Woonduk Kang(emeroad)
+ * @dean
  */
 public class ModuleSupport {
 
@@ -47,6 +49,7 @@ public class ModuleSupport {
 
     }
 
+    //设置方法
     public void setup() {
         // pinpoint module name : unnamed
         JavaModule bootstrapModule = getBootstrapModule();
@@ -61,6 +64,7 @@ public class ModuleSupport {
 
     }
 
+    //定义agent所需模块
     public void defineAgentModule(ClassLoader classLoader, URL[] jarFileList) {
 
         final JavaModule agentModule = newAgentModule(classLoader, jarFileList);
