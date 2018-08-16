@@ -17,6 +17,7 @@
 package com.navercorp.pinpoint.bootstrap.config;
 
 /**
+ *
  * @author emeroad
  */
 public enum DumpType {

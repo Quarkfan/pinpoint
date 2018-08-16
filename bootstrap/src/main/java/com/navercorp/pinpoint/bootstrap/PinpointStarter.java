@@ -126,24 +126,33 @@ class PinpointStarter {
 
         try {
             // Is it right to load the configuration in the bootstrap?
+            // 装载配置信息
             ProfilerConfig profilerConfig = DefaultProfilerConfig.load(configPath);
 
-            // this is the library list that must be loaded
+            // 必须装载的lib列表
             final URL[] urls = resolveLib(agentDirectory);
+            //创建类加载器
             final ClassLoader agentClassLoader = createClassLoader("pinpoint.agent", urls, parentClassLoader);
+            //如果模块引导装载器不为空，开始装载模块
             if (moduleBootLoader != null) {
                 this.logger.info("defineAgentModule");
                 moduleBootLoader.defineAgentModule(agentClassLoader, urls);
             }
-
+            //引导类加载
             final String bootClass = getBootClass();
             AgentBootLoader agentBootLoader = new AgentBootLoader(bootClass, urls, agentClassLoader);
             logger.info("pinpoint agent [" + bootClass + "] starting...");
 
+            //加载agent参数
             AgentOption option = createAgentOption(agentId, applicationName, isContainer, profilerConfig, instrumentation, pluginJars, agentDirectory);
+
+            //用Agent参数引导
             Agent pinpointAgent = agentBootLoader.boot(option);
+            //agent启动
             pinpointAgent.start();
+            //注册关闭的钩子
             registerShutdownHook(pinpointAgent);
+            //agent启动完成
             logger.info("pinpoint agent started normally.");
         } catch (Exception e) {
             // unexpected exception that did not be checked above
@@ -153,10 +162,14 @@ class PinpointStarter {
         return true;
     }
 
+    //创建类加载器
     private ClassLoader createClassLoader(final String name, final URL[] urls, final ClassLoader parentClassLoader) {
+        //系统中有安全配置
         if (System.getSecurityManager() != null) {
+            //通过访问控制器进行特权运行，防止由于权限问题导致调用链后边的内容不能正常工作
             return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
                 public ClassLoader run() {
+                    //通过类加载器工厂，创建类加载器
                     return PinpointClassLoaderFactory.createClassLoader(name, urls, parentClassLoader, ProfilerLibs.PINPOINT_PROFILER_CLASS);
                 }
             });
@@ -165,6 +178,7 @@ class PinpointStarter {
         }
     }
 
+    //根据type返回测试的引导还是常规的引导
     private String getBootClass() {
         final String agentType = getAgentType().toUpperCase();
         if (PLUGIN_TEST_AGENT.equals(agentType)) {
@@ -173,6 +187,7 @@ class PinpointStarter {
         return BOOT_CLASS;
     }
 
+    //获取agent的类型
     private String getAgentType() {
         String agentType = agentArgs.get(AGENT_TYPE);
         if (agentType == null) {

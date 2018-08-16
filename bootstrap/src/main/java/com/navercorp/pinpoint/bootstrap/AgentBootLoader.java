@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
 
 
 /**
- *
+ * 引导加载器
  * @author emeroad
  * @author dean
  */
@@ -47,6 +47,7 @@ public class AgentBootLoader {
 
     private final ContextClassLoaderExecuteTemplate<Object> executeTemplate;
 
+    //构造函数，构造Agent引导加载器
     public AgentBootLoader(String bootClass, URL[] urls, ClassLoader agentClassLoader) {
         if (bootClass == null) {
             throw new NullPointerException("bootClass must not be null");
@@ -59,8 +60,9 @@ public class AgentBootLoader {
         this.executeTemplate = new ContextClassLoaderExecuteTemplate<Object>(agentClassLoader);
     }
 
+    //引导启动
     public Agent boot(final AgentOption agentOption) {
-
+        //获取引导类
         final Class<?> bootStrapClazz = getBootStrapClass();
 
         final Object agent = executeTemplate.execute(new Callable<Object>() {
@@ -80,6 +82,7 @@ public class AgentBootLoader {
         if (agent instanceof Agent) {
             return (Agent) agent;
         } else {
+            //启动失败
             String agentClassName;
             if (agent == null) {
                 agentClassName = "Agent is null";
@@ -90,6 +93,7 @@ public class AgentBootLoader {
         }
     }
 
+    //获取引导类
     private Class<?> getBootStrapClass() {
         try {
             return this.classLoader.loadClass(bootClass);

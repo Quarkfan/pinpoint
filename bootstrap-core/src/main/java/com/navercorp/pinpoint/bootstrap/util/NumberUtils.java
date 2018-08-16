@@ -16,6 +16,7 @@
 
 package com.navercorp.pinpoint.bootstrap.util;
 
+//数字类型处理工具类
 public final class NumberUtils {
     private NumberUtils() {
     }

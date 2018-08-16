@@ -34,27 +34,35 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 /**
+ * 默认配置信息
  * @author emeroad
  * @author netspider
+ * @author dean
  */
 public class DefaultProfilerConfig implements ProfilerConfig {
     private static final CommonLogger logger = StdoutCommonLoggerFactory.INSTANCE.getLogger(DefaultProfilerConfig.class.getName());
+    //默认ip
     private static final String DEFAULT_IP = "127.0.0.1";
 
     private final Properties properties;
     private final PropertyPlaceholderHelper propertyPlaceholderHelper = new PropertyPlaceholderHelper("${", "}");
 
     @Deprecated
+    //探针动态修改字节码的引擎（可以补充JDK和CGlib的）
     public static final String INSTRUMENT_ENGINE_JAVASSIST = "JAVASSIST";
     public static final String INSTRUMENT_ENGINE_ASM = "ASM";
 
+    //默认探针状态收集周期
     public static final int DEFAULT_AGENT_STAT_COLLECTION_INTERVAL_MS = 5 * 1000;
+    //默认Agent状态批量
     public static final int DEFAULT_NUM_AGENT_STAT_BATCH_SEND = 6;
 
+    //value处理接口
     public interface ValueResolver {
         String resolve(String value, Properties properties);
     }
 
+    //直接处理
     private static class BypassResolver implements ValueResolver {
         public static final ValueResolver RESOLVER = new BypassResolver();
 
@@ -64,6 +72,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         }
     }
 
+    //PlaceHolder替换
     private class PlaceHolderResolver implements ValueResolver {
         @Override
         public String resolve(String value, Properties properties) {
@@ -74,6 +83,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         }
     }
 
+    //加载配置文件，创建DefaultProfilerConfig对象
     public static ProfilerConfig load(String pinpointConfigFileName) throws IOException {
         try {
             Properties properties = PropertyUtils.loadProperty(pinpointConfigFileName);
@@ -91,33 +101,49 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         }
     }
 
+    //配置开启开关
     private boolean profileEnable = false;
 
+    //动态字节码引擎采用ASM
     private String profileInstrumentEngine = INSTRUMENT_ENGINE_ASM;
+    //代码增强时，transform匹配开关
     private boolean instrumentMatcherEnable = true;
+    //匹配的缓存配置
     private InstrumentMatcherCacheConfig instrumentMatcherCacheConfig = new InstrumentMatcherCacheConfig();
-
+    //拦截器注册大小
     private int interceptorRegistrySize = 1024 * 8;
 
     @VisibleForTesting
+    //静态资源清理
     private boolean staticResourceCleanup = false;
 
+    //Span收集端IP
     private String collectorSpanServerIp = DEFAULT_IP;
+    //Span收集端端口
     private int collectorSpanServerPort = 9996;
 
+    //收集端状态端口及IP
     private String collectorStatServerIp = DEFAULT_IP;
     private int collectorStatServerPort = 9995;
 
+    //手机端TCP端口及IP
     private String collectorTcpServerIp = DEFAULT_IP;
     private int collectorTcpServerPort = 9994;
 
+    //span数据发送队列大小
     private int spanDataSenderWriteQueueSize = 1024 * 5;
+    //span数据发送socket缓存大小
     private int spanDataSenderSocketSendBufferSize = 1024 * 64 * 16;
+    //span数据发送socket超时时间
     private int spanDataSenderSocketTimeout = 1000 * 3;
+    //发送的chunk大小
     private int spanDataSenderChunkSize = 1024 * 16;
+    //发送协议
     private String spanDataSenderTransportType = "UDP";
+    //socket类型（注意对比NIO）
     private String spanDataSenderSocketType = "OIO";
 
+    //注释同上
     private int statDataSenderWriteQueueSize = 1024 * 5;
     private int statDataSenderSocketSendBufferSize = 1024 * 64 * 16;
     private int statDataSenderSocketTimeout = 1000 * 3;
@@ -125,74 +151,112 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     private String statDataSenderTransportType = "UDP";
     private String statDataSenderSocketType = "OIO";
 
+    //TCP相关配置
     private boolean tcpDataSenderCommandAcceptEnable = false;
     private boolean tcpDataSenderCommandActiveThreadEnable = false;
     private boolean tcpDataSenderCommandActiveThreadCountEnable = false;
     private boolean tcpDataSenderCommandActiveThreadDumpEnable = false;
     private boolean tcpDataSenderCommandActiveThreadLightDumpEnable = false;
 
+
+    //默认的Pinpoint客户端发送写入超时
     private static long DEFAULT_DATA_SENDER_PINPOINT_CLIENT_WRITE_TIMEOUT = 3 * 1000;
     private long tcpDataSenderPinpointClientWriteTimeout = DEFAULT_DATA_SENDER_PINPOINT_CLIENT_WRITE_TIMEOUT;
+
+    //默认的Pinpoint客户端请求超时
     private static long DEFAULT_DATA_SENDER_PINPOINT_CLIENT_REQUEST_TIMEOUT = 3 * 1000;
     private long tcpDataSenderPinpointClientRequestTimeout = DEFAULT_DATA_SENDER_PINPOINT_CLIENT_REQUEST_TIMEOUT;
+
+    //默认的Pinpoint客户端重连周期
     private static long DEFAULT_DATA_SENDER_PINPOINT_CLIENT_RECONNECT_INTERVAL = 3 * 1000;
     private long tcpDataSenderPinpointClientReconnectInterval = DEFAULT_DATA_SENDER_PINPOINT_CLIENT_RECONNECT_INTERVAL;
+
+    //默认的Pinpoint客户端ping周期
     private static long DEFAULT_DATA_SENDER_PINPOINT_CLIENT_PING_INTERVAL = 60 * 1000 * 5;
     private long tcpDataSenderPinpointClientPingInterval = DEFAULT_DATA_SENDER_PINPOINT_CLIENT_PING_INTERVAL;
+
+    //握手周期
     private static long DEFAULT_DATA_SENDER_PINPOINT_CLIENT_HANDSHAKE_INTERVAL = 60 * 1000 * 1;
     private long tcpDataSenderPinpointClientHandshakeInterval = DEFAULT_DATA_SENDER_PINPOINT_CLIENT_HANDSHAKE_INTERVAL;
 
+    //追踪线程激活
     private boolean traceAgentActiveThread = true;
 
+    //追踪数据源
     private boolean traceAgentDataSource = false;
+    //数据源追踪限制大小
     private int dataSourceTraceLimitSize = 20;
 
+    //死锁监控激活和周期
     private boolean deadlockMonitorEnable = true;
     private long deadlockMonitorInterval = 60000L;
 
+    //调用栈最大深度
     private int callStackMaxDepth = 512;
 
+    //jdbc sql 缓存大小
     private int jdbcSqlCacheSize = 1024;
+    //SQL语句绑定参数追踪
     private boolean traceSqlBindValue = false;
+    //最大的绑定参数设置
     private int maxSqlBindValueSize = 1024;
 
-    // Sampling
+    // 采样比例控制
     private boolean samplingEnable = true;
     private int samplingRate = 1;
 
-    // span buffering
+    // span 缓冲配置
     private boolean ioBufferingEnable;
     private int ioBufferingBufferSize;
 
+
+    //JVM供应商名
     private String profileJvmVendorName;
+    //操作系统名
     private String profileOsName;
+    //JVM状态收集周期
     private int profileJvmStatCollectIntervalMs = DEFAULT_AGENT_STAT_COLLECTION_INTERVAL_MS;
+    //JVM状态发送批数量
     private int profileJvmStatBatchSendCount = DEFAULT_NUM_AGENT_STAT_BATCH_SEND;
+    //JVM收集详情配置
     private boolean profilerJvmStatCollectDetailedMetrics;
 
+    //可配置的类过滤器
     private Filter<String> profilableClassFilter = new SkipFilter<String>();
 
+    //默认agent信息发送重试周期
     private final long DEFAULT_AGENT_INFO_SEND_RETRY_INTERVAL = 5 * 60 * 1000L;
     private long agentInfoSendRetryInterval = DEFAULT_AGENT_INFO_SEND_RETRY_INTERVAL;
 
+    //应用服务器类型
     private String applicationServerType;
+    //应用类型检测顺序
     private List<String> applicationTypeDetectOrder = Collections.emptyList();
+    //禁止插件列表
     private List<String> disabledPlugins = Collections.emptyList();
 
+    //阻止拦截器异常传播
     private boolean propagateInterceptorException = false;
+    //是否支持拉姆达表达式
     private boolean supportLambdaExpressions = true;
 
+    //代理HTTP请求头
     private boolean proxyHttpHeaderEnable = true;
 
+    //HTTP状态码错误
     private HttpStatusCodeErrors httpStatusCodeErrors = new HttpStatusCodeErrors();
 
+    //模块注入工厂类名
     private String injectionModuleFactoryClazzName = null;
+    //应用命名空间
     private String applicationNamespace = "";
 
+    //构造方法
     public DefaultProfilerConfig() {
         this.properties = new Properties();
     }
 
+    //构造方法
     public DefaultProfilerConfig(Properties properties) {
         if (properties == null) {
             throw new NullPointerException("properties must not be null");
@@ -201,6 +265,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         readPropertyValues();
     }
 
+    //getter和setter
     @Override
     public int getInterceptorRegistrySize() {
         return interceptorRegistrySize;
@@ -530,9 +595,9 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         return applicationNamespace;
     }
 
-    // for test
+    // 测试用方法
     void readPropertyValues() {
-        // TODO : use Properties' default value instead of using a temp variable.
+        // TODO : 用默properties默认值替换硬编码
         final ValueResolver placeHolderResolver = new PlaceHolderResolver();
 
         this.profileEnable = readBoolean("profiler.enable", true);
@@ -656,10 +721,12 @@ public class DefaultProfilerConfig implements ProfilerConfig {
 
 
     @Override
+    //读取字符串
     public String readString(String propertyName, String defaultValue) {
         return readString(propertyName, defaultValue, BypassResolver.RESOLVER);
     }
 
+    //读取字符串
     private String readString(String propertyName, String defaultValue, ValueResolver valueResolver) {
         if (valueResolver == null) {
             throw new NullPointerException("valueResolver must not be null");
@@ -673,6 +740,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //读取整形
     public int readInt(String propertyName, int defaultValue) {
         String value = properties.getProperty(propertyName);
         int result = NumberUtils.parseInteger(value, defaultValue);
@@ -683,6 +751,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //备份类型，DumpType为枚举类型，包括总是备份和异常时备份
     public DumpType readDumpType(String propertyName, DumpType defaultDump) {
         String propertyValue = properties.getProperty(propertyName);
         if (propertyValue == null) {
@@ -702,6 +771,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //读取长整型
     public long readLong(String propertyName, long defaultValue) {
         String value = properties.getProperty(propertyName);
         long result = NumberUtils.parseLong(value, defaultValue);
@@ -712,6 +782,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //读取list，逗号分隔
     public List<String> readList(String propertyName) {
         String value = properties.getProperty(propertyName);
         if (StringUtils.isEmpty(value)) {
@@ -721,6 +792,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //读取布尔型
     public boolean readBoolean(String propertyName, boolean defaultValue) {
         String value = properties.getProperty(propertyName, Boolean.toString(defaultValue));
         boolean result = Boolean.parseBoolean(value);
@@ -731,6 +803,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //按照正则读取
     public Map<String, String> readPattern(String propertyNamePatternRegex) {
         final Pattern pattern = Pattern.compile(propertyNamePatternRegex);
         final Map<String, String> result = new HashMap<String, String>();
@@ -752,6 +825,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     }
 
     @Override
+    //toString方法
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultProfilerConfig{");
         sb.append("properties=").append(properties);

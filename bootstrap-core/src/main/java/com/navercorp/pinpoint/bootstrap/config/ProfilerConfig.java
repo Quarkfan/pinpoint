@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 配置信息接口
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 public interface ProfilerConfig {
 

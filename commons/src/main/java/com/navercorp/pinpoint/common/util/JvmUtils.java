@@ -17,7 +17,9 @@
 package com.navercorp.pinpoint.common.util;
 
 /**
+ * JVM工具类
  * @author hyungil.jeong
+ * @author dean
  */
 public final class JvmUtils {
 

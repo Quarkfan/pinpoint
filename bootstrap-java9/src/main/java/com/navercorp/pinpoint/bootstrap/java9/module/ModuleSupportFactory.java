@@ -19,6 +19,7 @@ package com.navercorp.pinpoint.bootstrap.java9.module;
 import java.lang.instrument.Instrumentation;
 
 /**
+ * 模块化工厂
  * @author Woonduk Kang(emeroad)
  */
 public class ModuleSupportFactory {

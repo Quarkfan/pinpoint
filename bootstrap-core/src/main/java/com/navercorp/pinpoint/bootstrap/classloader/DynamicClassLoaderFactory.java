@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.List;
 
 /**
+ * 动态类加载器工厂
  * @author Woonduk Kang(emeroad)
  */
 public class DynamicClassLoaderFactory implements ClassLoaderFactory {

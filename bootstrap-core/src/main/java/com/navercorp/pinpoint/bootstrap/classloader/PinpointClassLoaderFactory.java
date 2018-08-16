@@ -26,7 +26,9 @@ import java.net.URL;
 import java.util.List;
 
 /**
+ * 类加载器工厂
  * @author Taejin Koo
+ * @author dean
  */
 public final class PinpointClassLoaderFactory {
 
@@ -40,23 +42,27 @@ public final class PinpointClassLoaderFactory {
     // jdk9
     private static final String JAVA9_CLASSLOADER = "com.navercorp.pinpoint.bootstrap.java9.classloader.Java9ClassLoader";
 
-
+    //无参构造函数抛出异常，私有化，禁止利用构造函数构造对象
     private PinpointClassLoaderFactory() {
         throw new IllegalAccessError();
     }
 
+    //创建类加载工厂
     public static ClassLoaderFactory createClassLoaderFactory() {
+        //读取JVM版本
         final JvmVersion jvmVersion = JvmUtils.getVersion();
-
+        //判断是否9+
         if (jvmVersion.onOrAfter(JvmVersion.JAVA_9)) {
+            //返回JAVA9的ClassLoader
             return newClassLoaderFactory(JAVA9_CLASSLOADER);
         }
 
-        // URLClassLoader not work for java9
+        // URLClassLoader 不能在java9工作
         if (disableChildFirst()) {
             return new URLClassLoaderFactory();
         }
 
+        //7+版本
         if (jvmVersion.onOrAfter(JvmVersion.JAVA_7)) {
             return newParallelClassLoaderFactory();
         }
@@ -65,20 +71,26 @@ public final class PinpointClassLoaderFactory {
         return new Java6ClassLoaderFactory();
     }
 
+    //系统中读取disable参数判断是否使用URL类加载器
     private static boolean disableChildFirst() {
         String disable = System.getProperty("pinpoint.agent.classloader.childfirst.disable");
         return "true".equalsIgnoreCase(disable);
     }
 
+    //根据给定的名字创建对应的类加载工厂
     private static ClassLoaderFactory newClassLoaderFactory(String factoryName) {
         ClassLoader classLoader = PinpointClassLoaderFactory.class.getClassLoader();
 
+        //给出工厂名和当前的类加载器
         return new DynamicClassLoaderFactory(factoryName, classLoader);
     }
 
+    //创建并行多线程类加载工厂
     private static ClassLoaderFactory newParallelClassLoaderFactory() {
         try {
             ClassLoader classLoader = PinpointClassLoaderFactory.class.getClassLoader();
+
+            //反射后调用构造方法实例化
             final Class<? extends ClassLoaderFactory> classLoaderFactoryClazz =
                     (Class<? extends ClassLoaderFactory>) Class.forName(PARALLEL_CLASS_LOADER_FACTORY, true, classLoader);
             Constructor<? extends ClassLoaderFactory> constructor = classLoaderFactoryClazz.getDeclaredConstructor();
@@ -89,6 +101,7 @@ public final class PinpointClassLoaderFactory {
     }
 
 
+    //执行类加载工厂中的创建类加载器方法
     public static ClassLoader createClassLoader(String name, URL[] urls, ClassLoader parent, List<String> libClass) {
         return CLASS_LOADER_FACTORY.createClassLoader(name, urls, parent, libClass);
     }

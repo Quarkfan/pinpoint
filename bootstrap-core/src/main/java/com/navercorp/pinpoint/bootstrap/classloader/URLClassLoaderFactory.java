@@ -21,7 +21,9 @@ import java.net.URLClassLoader;
 import java.util.List;
 
 /**
+ * URL 类加载工厂
  * @author Woonduk Kang(emeroad)
+ * @author dean
  */
 class URLClassLoaderFactory implements ClassLoaderFactory{
 
