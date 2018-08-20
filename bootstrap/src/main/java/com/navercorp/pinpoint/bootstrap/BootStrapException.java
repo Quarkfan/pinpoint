@@ -19,6 +19,7 @@ package com.navercorp.pinpoint.bootstrap;
 import com.navercorp.pinpoint.exception.PinpointException;
 
 /**
+ * 自定义异常
  * @author emeroad
  */
 public class BootStrapException extends PinpointException {

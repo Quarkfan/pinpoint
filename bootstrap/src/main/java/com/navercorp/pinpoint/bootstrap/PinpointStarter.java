@@ -42,7 +42,7 @@ import java.util.Map;
 class PinpointStarter {
     //日志记录器
     private final BootLogger logger = BootLogger.getLogger(PinpointStarter.class.getName());
-    //FIXME agent类型
+    // agent类型 用于区分测试的agent和非测试等情况
     public static final String AGENT_TYPE = "AGENT_TYPE";
     //FIXME 默认agent
     public static final String DEFAULT_AGENT = "DEFAULT_AGENT";
@@ -174,6 +174,7 @@ class PinpointStarter {
                 }
             });
         } else {
+            //没有安全管理
             return PinpointClassLoaderFactory.createClassLoader(name, urls, parentClassLoader, ProfilerLibs.PINPOINT_PROFILER_CLASS);
         }
     }
@@ -197,6 +198,7 @@ class PinpointStarter {
 
     }
 
+    //创建agent参数
     private AgentOption createAgentOption(String agentId, String applicationName, boolean isContainer,
                                           ProfilerConfig profilerConfig,
                                           Instrumentation instrumentation,
@@ -211,6 +213,8 @@ class PinpointStarter {
         this.systemProperty = systemProperty;
     }
 
+
+    //注册关闭钩子
     private void registerShutdownHook(final Agent pinpointAgent) {
         final Runnable stop = new Runnable() {
             @Override
@@ -218,8 +222,10 @@ class PinpointStarter {
                 pinpointAgent.stop();
             }
         };
+        //创建线程
         PinpointThreadFactory pinpointThreadFactory = new PinpointThreadFactory("Pinpoint-shutdown-hook", false);
         Thread thread = pinpointThreadFactory.newThread(stop);
+        //注册停止钩子
         Runtime.getRuntime().addShutdownHook(thread);
     }
 
@@ -261,14 +267,16 @@ class PinpointStarter {
         return null;
     }
 
-
+    //处理lib列表
     private URL[] resolveLib(AgentDirectory classPathResolver) {
         // this method may handle only absolute path,  need to handle relative path (./..agentlib/lib)
+        //只支持绝对路径，处理相对路径需要补充
         String agentJarFullPath = classPathResolver.getAgentJarFullPath();
         String agentLibPath = classPathResolver.getAgentLibPath();
         List<URL> urlList = resolveLib(classPathResolver.getLibs());
         String agentConfigPath = classPathResolver.getAgentConfigPath();
 
+        //记录日志
         if (logger.isInfoEnabled()) {
             logger.info("agent JarPath:" + agentJarFullPath);
             logger.info("agent LibDir:" + agentLibPath);
@@ -277,20 +285,24 @@ class PinpointStarter {
             }
             logger.info("agent config:" + agentConfigPath);
         }
+        //转换为数组返回
         return urlList.toArray(new URL[0]);
     }
 
+    //处理lib列表
     private List<URL> resolveLib(List<URL> urlList) {
+        //默认agent的处理方式
         if (DEFAULT_AGENT.equalsIgnoreCase(getAgentType())) {
             final List<URL> releaseLib = new ArrayList<URL>(urlList.size());
             for (URL url : urlList) {
-                //
+                //将URL转换为字符串，判断是否含有测试标记，如没有，添加到发布库中
                 if (!url.toExternalForm().contains("pinpoint-profiler-test")) {
                     releaseLib.add(url);
                 }
             }
             return releaseLib;
         } else {
+            //测试全加载
             logger.info("load " + PLUGIN_TEST_AGENT + " lib");
             // plugin test
             return urlList;

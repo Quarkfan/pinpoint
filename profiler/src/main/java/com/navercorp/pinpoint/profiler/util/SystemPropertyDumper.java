@@ -23,12 +23,15 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
+ * 系统属性备份（利用日志备份）
  * @author Woonduk Kang(emeroad)
+ * @dean
  */
 public class SystemPropertyDumper {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    //备份
     public void dump() {
         if (logger.isInfoEnabled()) {
             Properties properties = System.getProperties();

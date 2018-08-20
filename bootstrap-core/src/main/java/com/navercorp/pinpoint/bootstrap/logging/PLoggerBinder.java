@@ -17,6 +17,7 @@
 package com.navercorp.pinpoint.bootstrap.logging;
 
 /**
+ * 日志绑定接口
  * @author emeroad
  */
 public interface PLoggerBinder {

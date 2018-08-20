@@ -20,7 +20,7 @@ import java.util.concurrent.Callable;
 
 /**
  * This template is used for changing the current thread's classloader to the assigned one and executing a callable.
- *
+ * 用于把当前线程的加载器改变为指定的加载器，并执行callable线程
  * @author emeroad
  */
 public class ContextClassLoaderExecuteTemplate<V> {
@@ -33,16 +33,22 @@ public class ContextClassLoaderExecuteTemplate<V> {
 
     public V execute(Callable<V> callable) throws BootStrapException {
         try {
+            //读取当前线程
             final Thread currentThread = Thread.currentThread();
+            //保存之前的类加载器
             final ClassLoader before = currentThread.getContextClassLoader();
             // ctxCl == null safe?
+            //设置当前线程得上下文类加载器为指定的这个
             currentThread.setContextClassLoader(this.classLoader);
             try {
+                //执行线程
                 return callable.call();
             } finally {
                 // even though  the "BEFORE" classloader  is null, rollback  is needed.
                 // if an exception occurs BEFORE callable.call(), the call flow can't reach here.
                 // so  rollback  here is right.
+
+                //出现异常后，重新把classloader设置回去
                 currentThread.setContextClassLoader(before);
             }
         } catch (BootStrapException ex){

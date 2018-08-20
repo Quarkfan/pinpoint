@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 默认引导agent
+ * 默认agent
  * @author emeroad
  * @author koo.taejin
  * @author hyungil.jeong
@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultAgent implements Agent {
 
+    //日志记录 self4j
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final PLoggerBinder binder;
@@ -55,16 +56,21 @@ public class DefaultAgent implements Agent {
     private final ApplicationContext applicationContext;
 
 
+    //agent状态锁
     private final Object agentStatusLock = new Object();
     private volatile AgentStatus agentStatus;
 
 
     static {
         // Preload classes related to pinpoint-rpc module.
+        //预加载类和pinpoint-rpc模块有关
+        //预加载用于验证网络环境
         ClassPreLoader.preload();
     }
 
+    //构造函数
     public DefaultAgent(AgentOption agentOption) {
+        //agent配置校验
         if (agentOption == null) {
             throw new NullPointerException("agentOption must not be null");
         }
@@ -77,21 +83,28 @@ public class DefaultAgent implements Agent {
 
         logger.info("AgentOption:{}", agentOption);
 
+        //绑定日志记录
         this.binder = new Slf4jLoggerBinder();
         bindPLoggerFactory(this.binder);
 
+        //备份系统属性和配置信息
         dumpSystemProperties();
         dumpConfig(agentOption.getProfilerConfig());
 
+        //改变agent状态
         changeStatus(AgentStatus.INITIALIZING);
 
+        //配置信息加载
         this.profilerConfig = agentOption.getProfilerConfig();
 
+        //创建应用上下文
         this.applicationContext = newApplicationContext(agentOption);
 
     }
 
+    //新建应用上下文
     protected ApplicationContext newApplicationContext(AgentOption agentOption) {
+        //断言agent的配置不能为空
         Assert.requireNonNull(agentOption, "agentOption must not be null");
         ProfilerConfig profilerConfig = Assert.requireNonNull(agentOption.getProfilerConfig(), "profilerConfig must not be null");
 
@@ -104,18 +117,22 @@ public class DefaultAgent implements Agent {
         return applicationContext;
     }
 
+    //备份系统配置信息
     private void dumpSystemProperties() {
         SystemPropertyDumper dumper = new SystemPropertyDumper();
         dumper.dump();
     }
 
+    //备份配置信息
     private void dumpConfig(ProfilerConfig profilerConfig) {
+        //利用日志备份信息
         if (logger.isInfoEnabled()) {
             logger.info("{}\n{}", "dumpConfig", profilerConfig);
 
         }
     }
 
+    //agent状态
     private void changeStatus(AgentStatus status) {
         this.agentStatus = status;
         if (logger.isDebugEnabled()) {
@@ -123,6 +140,7 @@ public class DefaultAgent implements Agent {
         }
     }
 
+    //绑定日志工厂
     private void bindPLoggerFactory(PLoggerBinder binder) {
         final String binderClassName = binder.getClass().getName();
         PLogger pLogger = binder.getLogger(binder.getClass().getName());

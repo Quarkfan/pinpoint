@@ -25,6 +25,8 @@ import com.navercorp.pinpoint.rpc.client.PinpointClientFactory;
 import com.navercorp.pinpoint.rpc.server.PinpointServerAcceptor;
 
 /**
+ * 类预加载器，用于进行网络环境验证？
+ *
  * @author emeroad
  */
 public final class ClassPreLoader {
@@ -32,6 +34,7 @@ public final class ClassPreLoader {
 
     public static void preload() {
         try {
+            //默认65535端口
             preload(65535);
         } catch (Exception ignore) {
             // skip
@@ -43,6 +46,8 @@ public final class ClassPreLoader {
         PinpointClient client = null;
         PinpointClientFactory clientFactory = null;
         try {
+            //创建pinpoint的服务端  这部分参考netty
+            //本地回环
             serverAcceptor = new PinpointServerAcceptor();
             serverAcceptor.bind("127.0.0.1", port);
 
@@ -64,6 +69,7 @@ public final class ClassPreLoader {
                 throw new PinpointSocketException(ex.getMessage(), ex);
             }
         } finally {
+            //测试完成，关闭服务端，客户端，以及客户端工厂释放
             if (client != null) {
                 try {
                     client.close();

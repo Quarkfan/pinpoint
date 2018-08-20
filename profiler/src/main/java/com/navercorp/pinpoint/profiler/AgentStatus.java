@@ -16,6 +16,7 @@
 
 package com.navercorp.pinpoint.profiler;
 
+//Agent状态初始化、运行、停止
 public enum AgentStatus {
     INITIALIZING,
     RUNNING,

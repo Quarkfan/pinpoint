@@ -50,6 +50,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 
 /**
+ * 默认应用上下文
  * @author Woonduk Kang(emeroad)
  */
 public class DefaultApplicationContext implements ApplicationContext {

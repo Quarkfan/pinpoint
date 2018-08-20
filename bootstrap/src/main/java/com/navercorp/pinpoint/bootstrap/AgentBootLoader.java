@@ -57,6 +57,7 @@ public class AgentBootLoader {
         }
         this.bootClass = bootClass;
         this.classLoader = agentClassLoader;
+        //将agent的classloader放到上下文加载执行模板中，用于后续执行
         this.executeTemplate = new ContextClassLoaderExecuteTemplate<Object>(agentClassLoader);
     }
 
@@ -65,11 +66,16 @@ public class AgentBootLoader {
         //获取引导类
         final Class<?> bootStrapClazz = getBootStrapClass();
 
+        //上下文加载执行模板执行，更换线程的类加载器为前面设置的agentclassloader
+        //并执行给出的callable
+        //并获取agent
         final Object agent = executeTemplate.execute(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 try {
+                    //反射引导类构造方法
                     Constructor<?> constructor = bootStrapClazz.getDeclaredConstructor(AgentOption.class);
+                    //构造实例化
                     return constructor.newInstance(agentOption);
                 } catch (InstantiationException e) {
                     throw new BootStrapException("boot create failed. Error:" + e.getMessage(), e);
@@ -79,10 +85,11 @@ public class AgentBootLoader {
             }
         });
 
+        //检查agent，确认实例接口
         if (agent instanceof Agent) {
             return (Agent) agent;
         } else {
-            //启动失败
+            //启动失败，抛出异常
             String agentClassName;
             if (agent == null) {
                 agentClassName = "Agent is null";
