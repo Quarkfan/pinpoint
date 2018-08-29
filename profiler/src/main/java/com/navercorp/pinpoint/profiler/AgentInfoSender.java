@@ -36,27 +36,36 @@ import com.navercorp.pinpoint.profiler.sender.EnhancedDataSender;
 import com.navercorp.pinpoint.thrift.dto.TAgentInfo;
 
 /**
+ * agent信息发送器
  * @author emeroad
  * @author koo.taejin
  * @author HyunGil Jeong
+ * @author dean
  */
 public class AgentInfoSender {
     // refresh daily
+    //刷新周期
     private static final long DEFAULT_AGENT_INFO_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000L;
     // retry every 3 seconds
+    //重试周期
     private static final long DEFAULT_AGENT_INFO_SEND_INTERVAL_MS = 3 * 1000L;
     // retry 3 times per attempt
+    //重试次数
     private static final int DEFAULT_MAX_TRY_COUNT_PER_ATTEMPT = 3;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    //增强数据发送器
     private final EnhancedDataSender dataSender;
+    //agent信息工厂
     private final AgentInfoFactory agentInfoFactory;
     private final long refreshIntervalMs;
     private final long sendIntervalMs;
     private final int maxTryPerAttempt;
+    //执行计划
     private final Scheduler scheduler;
 
+    //构造agent信息发送器
     private AgentInfoSender(Builder builder) {
         this.dataSender = builder.dataSender;
         this.agentInfoFactory = builder.agentInfoFactory;
@@ -66,22 +75,27 @@ public class AgentInfoSender {
         this.scheduler = new Scheduler();
     }
 
+    //开始
     public void start() {
         scheduler.start();
     }
 
+    //停止
     public void stop() {
         scheduler.stop();
         logger.info("AgentInfoSender stopped");
     }
 
+    //刷新
     public void refresh() {
         scheduler.refresh();
     }
 
+    //成功接口
     private interface SuccessListener {
         void onSuccess();
 
+        //无操作实现
         SuccessListener NO_OP = new SuccessListener() {
             @Override
             public void onSuccess() {
@@ -90,20 +104,26 @@ public class AgentInfoSender {
         };
     }
 
+    //内部类，计划任务
     private class Scheduler {
 
+        //立即执行
         private static final long IMMEDIATE = 0L;
+        //timer计时器
         private final Timer timer = new Timer("Pinpoint-AgentInfoSender-Timer", true);
+        //锁标记
         private final Object lock = new Object();
-        // protected by lock's monitor
+        // 运行标记。利用锁保护
         private boolean isRunning = true;
 
+        //构造函数
         private Scheduler() {
-            // preload
+            // 预加载测试，执行一下默认的无操作监听器
             AgentInfoSendTask task = new AgentInfoSendTask(SuccessListener.NO_OP);
             task.run();
         }
 
+        //启动，不断添加任务保证任务持续
         public void start() {
             final SuccessListener successListener = new SuccessListener() {
                 @Override
@@ -114,31 +134,44 @@ public class AgentInfoSender {
             schedule(successListener, Integer.MAX_VALUE, IMMEDIATE, sendIntervalMs);
         }
 
+        //刷新
         public void refresh() {
             schedule(SuccessListener.NO_OP, maxTryPerAttempt, IMMEDIATE, sendIntervalMs);
         }
 
+        //添加日程 成功后回调内容，重试次数，发送时间，发送间隔
         private void schedule(SuccessListener successListener, int retryCount, long delay, long period) {
+            //加锁然后判断运行状态
             synchronized (lock) {
                 if (isRunning) {
+                    //创建发送任务
                     AgentInfoSendTask task = new AgentInfoSendTask(successListener, retryCount);
+                    //添加到定时器上
                     timer.scheduleAtFixedRate(task, delay, period);
                 }
             }
         }
 
+        //停止
         public void stop() {
+            //加锁
             synchronized (lock) {
+                //运行状态标记修改
                 isRunning = false;
+                //取消所有任务
                 timer.cancel();
             }
         }
     }
 
+    //发送任务，用于交个Timer计时器执行
     private class AgentInfoSendTask extends TimerTask {
 
+        //成功处理器
         private final SuccessListener taskHandler;
+        //重试次数
         private final int retryCount;
+        //计数器
         private AtomicInteger counter;
 
         private AgentInfoSendTask(SuccessListener taskHandler) {
@@ -157,11 +190,14 @@ public class AgentInfoSender {
         @Override
         public void run() {
             int runCount = counter.incrementAndGet();
+            //达到最大的重试次数，取消当前任务
             if (runCount > retryCount) {
                 this.cancel();
                 return;
             }
+            //发送agent信息
             boolean isSuccessful = sendAgentInfo();
+            //成功后取消任务，然后执行一下成功回调
             if (isSuccessful) {
                 logger.info("AgentInfo sent.");
                 this.cancel();
@@ -169,22 +205,29 @@ public class AgentInfoSender {
             }
         }
 
+        //发送agent信息
         private boolean sendAgentInfo() {
             try {
+                //agent信息
                 TAgentInfo agentInfo = agentInfoFactory.createAgentInfo();
+                //响应接受
                 final DefaultFuture<ResponseMessage> future = new DefaultFuture<ResponseMessage>();
 
                 logger.info("Sending AgentInfo {}", agentInfo);
+                //请求发送
                 dataSender.request(agentInfo, new ResponseMessageFutureListener(future));
+                //请求响应等待超时
                 if (!future.await()) {
                     logger.warn("request timed out while waiting for response.");
                     return false;
                 }
+                //失败
                 if (!future.isSuccess()) {
                     Throwable t = future.getCause();
                     logger.warn("request failed.", t);
                     return false;
                 }
+                //读取相应信息
                 ResponseMessage responseMessage = future.getResult();
                 if (responseMessage == null) {
                     logger.warn("result not set.");
@@ -197,6 +240,7 @@ public class AgentInfoSender {
             return false;
         }
 
+        //从responseMessage中提取结果（是否成功）
         private boolean getResult(ResponseMessage responseMessage) {
             byte[] message = responseMessage.getMessage();
             Message<TBase<?, ?>> deserialize = SerializationUtils.deserialize(message, HeaderTBaseDeserializerFactory.DEFAULT_FACTORY, EmptyMessage.INSTANCE);
@@ -218,6 +262,7 @@ public class AgentInfoSender {
         }
     }
 
+    //构建发送器的时候用于承载参数
     public static class Builder {
         private final EnhancedDataSender dataSender;
         private final AgentInfoFactory agentInfoFactory;
@@ -251,6 +296,7 @@ public class AgentInfoSender {
             return this;
         }
 
+        //构建agent信息发送器
         public AgentInfoSender build() {
             if (this.refreshIntervalMs <= 0) {
                 throw new IllegalStateException("agentInfoRefreshIntervalMs must be greater than 0");
